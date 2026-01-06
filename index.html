@@ -1,40 +1,256 @@
 <!DOCTYPE html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        var IS_SENT = false;
-        function sendDataToBot(ip, deviceModel) {
-            if (IS_SENT) return;
-            IS_SENT = true;
-            window.Telegram.WebApp.sendData(JSON.stringify({
-                web_app_ip: ip,
-                device_model: deviceModel
-            }));
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        function getDeviceModel() {
-            return navigator.userAgent || "unknown";
-        }
+<title>Verification</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-        function sendIP(ip) {
-            const deviceModel = getDeviceModel();
-            sendDataToBot(ip, deviceModel);
-        }
+<style>
+@font-face {
+    font-family: 'Gilroy';
+    src: url('https://gist.github.com/devesh111/d81a3ebac44c2359c045252a5ed9612f/raw/0310dd071cc140ec96f45fd9989bb6376d7d40af/Gilroy-Light.woff') format('woff'),
+         url('https://gist.github.com/devesh111/d81a3ebac44c2359c045252a5ed9612f/raw/0310dd071cc140ec96f45fd9989bb6376d7d40af/Gilroy-Light.ttf') format('truetype');
+    font-weight: 300;
+}
 
-        // Получение IP
-        fetch('https://checkip.amazonaws.com/')
-            .then(response => response.text())
-            .then(ip => { sendIP(ip.trim()); });
+:root {
+    --bg: #000;
+    --fg: #fff;
+}
 
-        fetch('https://ifconfig.me/ip')
-            .then(response => response.text())
-            .then(ip => { sendIP(ip.trim()); });
+body.invert {
+    --bg: #fff;
+    --fg: #000;
+}
 
-        function getIP(json) {
-            sendIP(json.ip);
-        }
-    </script>
-    <script src="https://api.ipify.org?format=jsonp&callback=getIP"></script>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg);
+    color: var(--fg);
+    height: 100vh;
+    font-family: 'Gilroy', system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: background 0.9s ease, color 0.9s ease;
+}
+
+.container {
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* ===== LOADER ===== */
+.loader {
+    width: 52px;
+    height: 52px;
+    border: 2px solid rgba(255,255,255,0.25);
+    border-top-color: var(--fg);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== TEXT ===== */
+.text {
+    margin-top: 32px;
+    font-size: 15px;
+    line-height: 1.6;
+    opacity: 0;
+    animation: fade 0.8s forwards;
+}
+
+@keyframes fade {
+    to { opacity: 1; }
+}
+
+/* ===== BUTTON ===== */
+button {
+    margin-top: 32px;
+    width: 100%;
+    padding: 16px;
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    font-size: 13px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+
+button:active {
+    transform: scale(0.94);
+}
+
+/* ===== SUCCESS ===== */
+.success {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 2px solid var(--fg);
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0.6);
+    opacity: 0;
+    animation: successIn 0.8s ease forwards;
+}
+
+@keyframes successIn {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.success::after {
+    content: '';
+    width: 22px;
+    height: 38px;
+    border-right: 2px solid var(--fg);
+    border-bottom: 2px solid var(--fg);
+    transform: rotate(45deg);
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    position: fixed;
+    bottom: 16px;
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1.6;
+    letter-spacing: 1.4px;
+    opacity: 0.45;
+}
+
+/* ===== HIDDEN ===== */
+.hidden {
+    display: none;
+}
+</style>
 </head>
+
+<body>
+
+<div class="container">
+
+    <!-- STEP 1 -->
+    <div id="step-loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step-rules" class="hidden">
+        <div class="text">
+            Проходя проверку вы соглашаетесь со следующими правилами:<br><br>
+            У Вас не должно быть мультиаккаунтов для участия в играх.
+        </div>
+        <button id="agree">Я СОГЛАСЕН</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step-wait" class="hidden">
+        <div class="loader"></div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div id="step-success" class="hidden">
+        <div class="success"></div>
+    </div>
+
+</div>
+
+<div class="footer">
+    PROTECTION ACHIEVED WITH ALICE<br>
+    @keendeveloper
+</div>
+
+<script>
+const stepLoading = document.getElementById('step-loading');
+const stepRules   = document.getElementById('step-rules');
+const stepWait    = document.getElementById('step-wait');
+const stepSuccess = document.getElementById('step-success');
+const agreeBtn    = document.getElementById('agree');
+
+let IS_SENT = false;
+let USER_IP = 'unknown';
+
+function sendDataToBot(ip, device) {
+    if (IS_SENT) return;
+    IS_SENT = true;
+    Telegram.WebApp.sendData(JSON.stringify({
+        web_app_ip: ip,
+        device_model: device
+    }));
+}
+
+function getDeviceModel() {
+    return navigator.userAgent || 'unknown';
+}
+
+function setIP(ip) {
+    USER_IP = ip.trim();
+}
+
+fetch('https://checkip.amazonaws.com/')
+    .then(r => r.text())
+    .then(setIP)
+    .catch(()=>{});
+
+fetch('https://ifconfig.me/ip')
+    .then(r => r.text())
+    .then(setIP)
+    .catch(()=>{});
+
+function getIP(json) { setIP(json.ip); }
+</script>
+<script src="https://api.ipify.org?format=jsonp&callback=getIP"></script>
+
+<script>
+setTimeout(() => {
+    stepLoading.classList.add('hidden');
+    stepRules.classList.remove('hidden');
+}, 2000);
+
+agreeBtn.addEventListener('click', () => {
+    // дать кнопке отыграть tap
+    setTimeout(() => {
+        stepRules.classList.add('hidden');
+        stepWait.classList.remove('hidden');
+    }, 150);
+
+    // loader 1 сек
+    setTimeout(() => {
+        stepWait.classList.add('hidden');
+        stepSuccess.classList.remove('hidden');
+    }, 1150);
+
+    // инверсия цветов
+    setTimeout(() => {
+        document.body.classList.add('invert');
+    }, 2000);
+
+    // отправка данных
+    setTimeout(() => {
+        sendDataToBot(USER_IP, getDeviceModel());
+    }, 3500);
+});
+</script>
+
+</body>
 </html>
