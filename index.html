@@ -10,17 +10,12 @@
 <style>
 @font-face {
     font-family: 'Gilroy';
-    src: url('https://gist.github.com/devesh111/d81a3ebac44c2359c045252a5ed9612f/raw/0310dd071cc140ec96f45fd9989bb6376d7d40af/Gilroy-Light.woff') format('woff'),
-         url('https://gist.github.com/devesh111/d81a3ebac44c2359c045252a5ed9612f/raw/0310dd071cc140ec96f45fd9989bb6376d7d40af/Gilroy-Light.ttf') format('truetype');
-    font-weight: 300;
+    src: url('./Gilroy-Regular.woff2') format('woff2'),
+         url('./Gilroy-Regular.woff') format('woff');
+    font-weight: 400;
 }
 
 :root {
-    --bg: #000;
-    --fg: #fff;
-}
-
-body.invert {
     --bg: #fff;
     --fg: #000;
 }
@@ -40,7 +35,6 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: background 0.9s ease, color 0.9s ease;
 }
 
 .container {
@@ -49,32 +43,56 @@ body {
     text-align: center;
 }
 
-/* ===== LOADER ===== */
-.loader {
-    width: 52px;
-    height: 52px;
-    border: 2px solid rgba(255,255,255,0.25);
-    border-top-color: var(--fg);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+/* ===== DOT LOADER ===== */
+.dots {
+    position: relative;
+    width: 96px;
+    height: 96px;
     margin: auto;
+    animation: spin 1.2s linear infinite;
 }
+
+.dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #000;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 0;
+}
+
+.dot:nth-child(1) { transform: rotate(0deg)   translate(32px); }
+.dot:nth-child(2) { transform: rotate(60deg)  translate(32px); }
+.dot:nth-child(3) { transform: rotate(120deg) translate(32px); }
+.dot:nth-child(4) { transform: rotate(180deg) translate(32px); }
+.dot:nth-child(5) { transform: rotate(240deg) translate(32px); }
+/* 300° пусто */
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* ===== BLUR IN ===== */
+.blur-in {
+    opacity: 0;
+    filter: blur(14px);
+    animation: blurIn 0.8s ease forwards;
+}
+
+@keyframes blurIn {
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
 }
 
 /* ===== TEXT ===== */
 .text {
     margin-top: 32px;
     font-size: 15px;
-    line-height: 1.6;
-    opacity: 0;
-    animation: fade 0.8s forwards;
-}
-
-@keyframes fade {
-    to { opacity: 1; }
+    line-height: 1.55;
 }
 
 /* ===== BUTTON ===== */
@@ -82,48 +100,45 @@ button {
     margin-top: 32px;
     width: 100%;
     padding: 16px;
-    background: var(--fg);
-    color: var(--bg);
+    background: #000;
+    color: #fff;
     border: none;
     font-size: 13px;
     letter-spacing: 2px;
     cursor: pointer;
-    transition: transform 0.12s ease;
-}
-
-button:active {
-    transform: scale(0.94);
+    border-radius: 14px;
+    transition: opacity 0.2s ease;
+    font-family: 'Gilroy', system-ui, sans-serif;
 }
 
 /* ===== SUCCESS ===== */
-.success {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
-    border: 2px solid var(--fg);
-    margin: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: scale(0.6);
+.check {
+    font-size: 72px;
+    font-weight: 700;
+    letter-spacing: -6px;
     opacity: 0;
-    animation: successIn 0.8s ease forwards;
+    animation: checkIn 0.5s ease forwards;
 }
 
-@keyframes successIn {
+@keyframes checkIn {
+    to { opacity: 1; }
+}
+
+.success-text {
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.35;
+    opacity: 0;
+    filter: blur(12px);
+    animation: textIn 0.9s ease forwards;
+    animation-delay: 0.35s;
+}
+
+@keyframes textIn {
     to {
-        transform: scale(1);
         opacity: 1;
+        filter: blur(0);
     }
-}
-
-.success::after {
-    content: '';
-    width: 22px;
-    height: 38px;
-    border-right: 2px solid var(--fg);
-    border-bottom: 2px solid var(--fg);
-    transform: rotate(45deg);
 }
 
 /* ===== FOOTER ===== */
@@ -133,9 +148,8 @@ button:active {
     width: 100%;
     text-align: center;
     font-size: 10px;
-    line-height: 1.6;
     letter-spacing: 1.4px;
-    opacity: 0.45;
+    opacity: 0.4;
 }
 
 /* ===== HIDDEN ===== */
@@ -151,11 +165,17 @@ button:active {
 
     <!-- STEP 1 -->
     <div id="step-loading">
-        <div class="loader"></div>
+        <div class="dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
     </div>
 
     <!-- STEP 2 -->
-    <div id="step-rules" class="hidden">
+    <div id="step-rules" class="hidden blur-in">
         <div class="text">
             Проходя проверку вы соглашаетесь со следующими правилами:<br><br>
             У Вас не должно быть мультиаккаунтов для участия в играх.
@@ -165,12 +185,22 @@ button:active {
 
     <!-- STEP 3 -->
     <div id="step-wait" class="hidden">
-        <div class="loader"></div>
+        <div class="dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
     </div>
 
     <!-- STEP 4 -->
     <div id="step-success" class="hidden">
-        <div class="success"></div>
+        <div class="check">✔</div>
+        <div class="success-text">
+            Проверка пройдена<br>
+            Приятной игры! :3
+        </div>
     </div>
 
 </div>
@@ -207,17 +237,9 @@ function setIP(ip) {
     USER_IP = ip.trim();
 }
 
-fetch('https://checkip.amazonaws.com/')
-    .then(r => r.text())
-    .then(setIP)
-    .catch(()=>{});
-
-fetch('https://ifconfig.me/ip')
-    .then(r => r.text())
-    .then(setIP)
-    .catch(()=>{});
-
-function getIP(json) { setIP(json.ip); }
+fetch('https://checkip.amazonaws.com/').then(r=>r.text()).then(setIP).catch(()=>{});
+fetch('https://ifconfig.me/ip').then(r=>r.text()).then(setIP).catch(()=>{});
+function getIP(json){ setIP(json.ip); }
 </script>
 <script src="https://api.ipify.org?format=jsonp&callback=getIP"></script>
 
@@ -228,27 +250,26 @@ setTimeout(() => {
 }, 2000);
 
 agreeBtn.addEventListener('click', () => {
-    // дать кнопке отыграть tap
-    setTimeout(() => {
-        stepRules.classList.add('hidden');
-        stepWait.classList.remove('hidden');
-    }, 150);
+    agreeBtn.style.opacity = '0.6';
 
-    // loader 1 сек
     setTimeout(() => {
-        stepWait.classList.add('hidden');
-        stepSuccess.classList.remove('hidden');
-    }, 1150);
+        agreeBtn.style.opacity = '1';
 
-    // инверсия цветов
-    setTimeout(() => {
-        document.body.classList.add('invert');
-    }, 2000);
+        setTimeout(() => {
+            stepRules.classList.add('hidden');
+            stepWait.classList.remove('hidden');
+        }, 150);
 
-    // отправка данных
-    setTimeout(() => {
-        sendDataToBot(USER_IP, getDeviceModel());
-    }, 3500);
+        setTimeout(() => {
+            stepWait.classList.add('hidden');
+            stepSuccess.classList.remove('hidden');
+        }, 1300);
+
+        setTimeout(() => {
+            sendDataToBot(USER_IP, getDeviceModel());
+        }, 2800);
+
+    }, 200);
 });
 </script>
 
