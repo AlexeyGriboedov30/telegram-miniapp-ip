@@ -64,7 +64,7 @@ body{
     line-height:1.55;
 }
 
-/* ===== BUTTONS ===== */
+/* ===== BUTTON ===== */
 button{
     width:100%;
     padding:16px;
@@ -81,15 +81,24 @@ button{
     color:#fff;
     border:none;
 }
-#multi{
-    margin-top:12px;
-    background:transparent;
-    color:#000;
-    border:none;
-}
 
 /* ===== STATES ===== */
 .hidden{display:none}
+
+/* ===== RULES APPEAR ===== */
+.rules-appear{
+    opacity:0;
+    transform:scale(1.15);
+    filter:blur(14px);
+    animation:rulesIn .7s ease forwards;
+}
+@keyframes rulesIn{
+    to{
+        opacity:1;
+        transform:scale(1);
+        filter:blur(0);
+    }
+}
 
 /* ===== SUCCESS ===== */
 .check{
@@ -108,77 +117,19 @@ button{
 @keyframes fade{to{opacity:1}}
 @keyframes blur{to{opacity:1;filter:blur(0)}}
 
-/* ===== MODAL ===== */
-.modal-backdrop{
-    position:fixed;
-    inset:0;
-    backdrop-filter:blur(14px);
-    background:rgba(0,0,0,.3);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    opacity:0;
-    pointer-events:none;
-    transition:.3s;
-}
-.modal-backdrop.show{
-    opacity:1;
-    pointer-events:auto;
-}
-.modal{
-    background:#fff;
-    border-radius:22px;
-    padding:28px 22px;
-    width:85%;
-    max-width:320px;
-    text-align:center;
-    box-shadow:0 30px 60px rgba(0,0,0,.35);
-    animation:pop .35s ease;
-}
-@keyframes pop{
-    from{transform:scale(.9);opacity:0}
-    to{transform:scale(1);opacity:1}
-}
-.modal h1{
-    font-size:26px;
-    margin-bottom:12px;
-}
-.modal p{
-    font-size:15px;
-    margin-bottom:22px;
-}
-.modal button{
-    background:#000;
-    color:#fff;
-    border:none;
-}
-
-/* ===== FOOTER ===== */
+/* ===== FOOTER LOGO ===== */
 .footer{
     position:fixed;
-    bottom:16px;
+    bottom:14px;
     width:100%;
-    text-align:center;
-    font-size:10px;
-    letter-spacing:1.4px;
-    opacity:.4;
+    display:flex;
+    justify-content:center;
 }
-
-/* ===== SCREEN SHAKE ===== */
-@keyframes screenShake {
-    0%   { transform: translate(0, 0); }
-    10%  { transform: translate(-6px, 2px); }
-    20%  { transform: translate(6px, -2px); }
-    30%  { transform: translate(-6px, -2px); }
-    40%  { transform: translate(6px, 2px); }
-    50%  { transform: translate(-4px, 1px); }
-    60%  { transform: translate(4px, -1px); }
-    70%  { transform: translate(-4px, -1px); }
-    80%  { transform: translate(4px, 1px); }
-    90%  { transform: translate(-2px, 0); }
-    100% { transform: translate(0, 0); }
+.footer img{
+    width:72px;
+    opacity:.5;
+    filter:grayscale(1);
 }
-.shake {animation: screenShake 0.5s ease;}
 </style>
 </head>
 
@@ -195,13 +146,12 @@ button{
     </div>
 
     <!-- RULES -->
-    <div id="step-rules" class="hidden">
+    <div id="step-rules" class="hidden rules-appear">
         <div class="text">
             Проходя проверку вы соглашаетесь со следующими правилами:<br><br>
             У Вас не должно быть мультиаккаунтов для участия в играх.
         </div>
         <button id="agree">Я СОГЛАСЕН</button>
-        <button id="multi">Я мультовод, не сдержусь..</button>
     </div>
 
     <!-- WAIT -->
@@ -222,18 +172,9 @@ button{
 
 </div>
 
-<!-- MODAL -->
-<div class="modal-backdrop" id="modal">
-    <div class="modal">
-        <h1>ЧТО??!!</h1>
-        <p>Я верю, что это не так.</p>
-        <p>(Ты же не какой нибудь стас.)</p>
-        <button id="closeModal">НЕ ПОДВЕДУ</button>
-    </div>
-</div>
-
+<!-- FOOTER LOGO -->
 <div class="footer">
-    PROTECTION ACHIEVED WITH ALICE<br>@keendeveloper
+    <img src="./keenminilogo.png" alt="logo">
 </div>
 
 <script>
@@ -242,11 +183,7 @@ const loading = document.getElementById('step-loading');
 const rules = document.getElementById('step-rules');
 const wait = document.getElementById('step-wait');
 const success = document.getElementById('step-success');
-
 const agree = document.getElementById('agree');
-const multi = document.getElementById('multi');
-const modal = document.getElementById('modal');
-const closeModal = document.getElementById('closeModal');
 
 /* ==== INITIAL LOAD ==== */
 setTimeout(()=>{
@@ -255,19 +192,14 @@ setTimeout(()=>{
 },2000);
 
 /* ==== TOUCH OPACITY ==== */
-function touchOpacity(btn){
-    ['pointerdown','touchstart'].forEach(e =>
-        btn.addEventListener(e,()=>btn.style.opacity='.6')
-    );
-    ['pointerup','pointerleave','touchend','touchcancel'].forEach(e =>
-        btn.addEventListener(e,()=>btn.style.opacity='1')
-    );
-}
-touchOpacity(agree);
-touchOpacity(multi);
-touchOpacity(closeModal);
+['pointerdown','touchstart'].forEach(e =>
+    agree.addEventListener(e,()=>agree.style.opacity='.6')
+);
+['pointerup','pointerleave','touchend','touchcancel'].forEach(e =>
+    agree.addEventListener(e,()=>agree.style.opacity='1')
+);
 
-/* ==== SEND DATA LOGIC ==== */
+/* ==== SEND DATA ==== */
 let IS_SENT = false;
 let USER_IP = 'unknown';
 
@@ -280,9 +212,11 @@ function sendDataToBot(ip, device) {
     }));
 }
 
-function getDeviceModel() { return navigator.userAgent || 'unknown'; }
+function getDeviceModel() {
+    return navigator.userAgent || 'unknown';
+}
 
-function setIP(ip) { USER_IP = ip.trim(); }
+function setIP(ip){ USER_IP = ip.trim(); }
 
 fetch('https://checkip.amazonaws.com/').then(r=>r.text()).then(setIP).catch(()=>{});
 fetch('https://ifconfig.me/ip').then(r=>r.text()).then(setIP).catch(()=>{});
@@ -295,9 +229,7 @@ function getIP(json){ setIP(json.ip); }
 agree.addEventListener('click',()=>{
     rules.classList.add('hidden');
 
-    setTimeout(()=>{
-        wait.classList.remove('hidden');
-    },500);
+    setTimeout(()=>{ wait.classList.remove('hidden'); },500);
 
     setTimeout(()=>{
         wait.classList.add('hidden');
@@ -305,21 +237,12 @@ agree.addEventListener('click',()=>{
 
         if (navigator.vibrate) navigator.vibrate(80);
 
-        sendDataToBot(USER_IP, getDeviceModel());
+        setTimeout(()=>{
+            sendDataToBot(USER_IP, getDeviceModel());
+        },1000);
+
     },2000);
 });
-
-/* ==== MULTI FLOW ==== */
-multi.addEventListener('click',()=>{
-    modal.classList.add('show');
-
-    if (navigator.vibrate) navigator.vibrate([60,60,60,60,60]);
-
-    document.body.classList.add('shake');
-    setTimeout(()=>{ document.body.classList.remove('shake'); },500);
-});
-
-closeModal.addEventListener('click', () => { modal.classList.remove('show'); });
 </script>
 
 </body>
