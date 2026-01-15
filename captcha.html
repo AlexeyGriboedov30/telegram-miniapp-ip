@@ -44,7 +44,7 @@ body {
     position: relative;
     animation: spin 1.2s linear infinite;
     transform-origin: 50% 50%;
-    transition: transform 1s ease; /* плавное уменьшение */
+    transition: opacity 0.6s ease;
 }
 
 .dot {
@@ -67,8 +67,8 @@ body {
 
 /* ===== TEXT UNDER LOADER ===== */
 .loader-text {
-    margin-top: 21px;
-    font-size: 23px;
+    margin-top: 16px;
+    font-size: 20px;
     opacity: 0;
     filter: blur(8px);
     font-family: 'Gilroy', system-ui, sans-serif;
@@ -91,18 +91,17 @@ body {
     100% { background-position: -200% 0; }
 }
 
-
 /* ===== SUCCESS ===== */
 .checkmark {
     font-size: 72px;
     color: #2ecc71;
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.5s ease;
 }
 
 .success-text {
     margin-top: 12px;
-    font-size: 15px;
+    font-size: 20px;
     opacity: 0;
     filter: blur(12px);
     animation: blurIn 0.8s ease forwards 0.25s;
@@ -130,8 +129,8 @@ body {
 
     <!-- SUCCESS -->
     <div id="step-success" class="hidden">
-        <div class="checkmark">✔</div>
-        <div class="success-text">Проверка пройдена! :3</div>
+        <div class="checkmark" id="checkmark">✔</div>
+        <div class="success-text" id="success-text">Проверка пройдена! :3</div>
     </div>
 
 </div>
@@ -152,6 +151,8 @@ const rules   = document.getElementById('step-rules');
 const success = document.getElementById('step-success');
 const loaderText = document.getElementById('loader-text');
 const dotsLoader = document.getElementById('dots-loader');
+const checkmark = document.getElementById('checkmark');
+const successText = document.getElementById('success-text');
 
 /* ==== DEVICE ==== */
 function getDeviceModel() { return navigator.userAgent; }
@@ -168,13 +169,17 @@ function initHCaptcha() {
 }
 
 function onCaptchaSuccess(token){
-    // плавное уменьшение loader, spin продолжается
-    dotsLoader.style.transform = "scale(0.5)";
+    // плавно скрываем loader
+    dotsLoader.style.opacity = "0";
+    loaderText.style.opacity = "0";
 
     // через 0.6 сек показать галочку и текст
     setTimeout(()=>{
         loading.classList.add('hidden');
         success.classList.remove('hidden');
+
+        checkmark.style.opacity = "1";
+        successText.style.opacity = "1";
 
         if(navigator.vibrate) navigator.vibrate(80);
 
