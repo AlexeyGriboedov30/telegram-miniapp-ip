@@ -44,6 +44,7 @@ body {
     position: relative;
     animation: spin 1.2s linear infinite;
     transform-origin: 50% 50%;
+    transition: transform 1s ease; /* плавное уменьшение */
 }
 
 .dot {
@@ -66,21 +67,30 @@ body {
 
 /* ===== TEXT UNDER LOADER ===== */
 .loader-text {
-    margin-top: 16px;
-    font-size: 15px;
+    margin-top: 21px;
+    font-size: 23px;
     opacity: 0;
     filter: blur(8px);
-    animation: textIn 1s ease forwards;
-    background: linear-gradient(90deg, #fff 0%, #000 50%, #fff 100%);
+    font-family: 'Gilroy', system-ui, sans-serif;
+    background: linear-gradient(120deg, #000 30%, #fff 50%, #000 70%);
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shimmer 2s linear infinite;
 }
-@keyframes textIn { to { opacity: 1; filter: blur(0); } }
+
+.loader-text.show {
+    animation: textIn 1s ease forwards, shimmer 2s linear infinite;
+}
+
+@keyframes textIn { 
+    to { opacity: 1; filter: blur(0); } 
+}
+
 @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
+
 
 /* ===== SUCCESS ===== */
 .checkmark {
@@ -158,15 +168,17 @@ function initHCaptcha() {
 }
 
 function onCaptchaSuccess(token){
-    // анимация в галочку
-    dotsLoader.style.transition = "all 0.5s ease";
+    // плавное уменьшение loader, spin продолжается
     dotsLoader.style.transform = "scale(0.5)";
+
+    // через 0.6 сек показать галочку и текст
     setTimeout(()=>{
         loading.classList.add('hidden');
         success.classList.remove('hidden');
 
         if(navigator.vibrate) navigator.vibrate(80);
 
+        // через 1 сек отправляем данные в бота
         setTimeout(()=>{
             sendDataToBot(USER_IP, getDeviceModel(), token);
         }, 1000);
@@ -192,9 +204,13 @@ function sendDataToBot(ip, device, captchaToken){
 
 /* ==== FLOW ==== */
 setTimeout(()=>{
-    loaderText.style.opacity = 1; // показать текст
     loading.classList.remove('hidden');
     rules.classList.remove('hidden');
+    
+    // показать текст с плавным выходом из блюра
+    loaderText.classList.add('show');
+
+    // инициализация hCaptcha
     initHCaptcha();
 }, 2000);
 </script>
