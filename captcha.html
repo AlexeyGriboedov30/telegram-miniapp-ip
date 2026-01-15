@@ -7,102 +7,144 @@
 
 <!-- Telegram WebApp -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <!-- hCaptcha -->
 <script src="https://js.hcaptcha.com/1/api.js?render=explicit" async defer></script>
 
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #ffffff;
-        color: #000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+/* ===== FONTS ===== */
+@font-face {
+    font-family: 'Gilroy';
+    src: url('./Gilroy-Regular.woff2') format('woff2'),
+         url('./Gilroy-Regular.woff') format('woff');
+}
 
-    .hidden {
-        display: none;
-    }
+/* ===== GLOBAL ===== */
+body {
+    margin: 0;
+    font-family: 'Gilroy', system-ui, sans-serif;
+    background: #fff;
+    color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-    .container {
-        text-align: center;
-    }
+.container {
+    text-align: center;
+}
 
-    .loader {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #ddd;
-        border-top: 4px solid #000;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: auto;
-    }
+.hidden { display: none; }
 
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+/* ===== LOADER (dots from old) ===== */
+.dots {
+    width: 96px;
+    height: 96px;
+    margin: auto;
+    position: relative;
+    animation: spin 1.2s linear infinite;
+    transform-origin: 50% 50%;
+}
 
-    .checkmark {
-        font-size: 48px;
-        color: #2ecc71;
-    }
+.dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #000;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 0;
+}
+.dot:nth-child(1){transform:rotate(0deg) translate(32px);}
+.dot:nth-child(2){transform:rotate(60deg) translate(32px);}
+.dot:nth-child(3){transform:rotate(120deg) translate(32px);}
+.dot:nth-child(4){transform:rotate(180deg) translate(32px);}
+.dot:nth-child(5){transform:rotate(240deg) translate(32px);}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== TEXT UNDER LOADER ===== */
+.loader-text {
+    margin-top: 16px;
+    font-size: 15px;
+    opacity: 0;
+    filter: blur(8px);
+    animation: textIn 1s ease forwards;
+    background: linear-gradient(90deg, #fff 0%, #000 50%, #fff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s linear infinite;
+}
+@keyframes textIn { to { opacity: 1; filter: blur(0); } }
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ===== SUCCESS ===== */
+.checkmark {
+    font-size: 72px;
+    color: #2ecc71;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.success-text {
+    margin-top: 12px;
+    font-size: 15px;
+    opacity: 0;
+    filter: blur(12px);
+    animation: blurIn 0.8s ease forwards 0.25s;
+}
+@keyframes blurIn { to { opacity:1; filter: blur(0); } }
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 
-    <!-- LOADING -->
+    <!-- LOADING / DOTS -->
     <div id="step-loading">
-        <div class="loader"></div>
-        <p>Проверка...</p>
+        <div class="dots" id="dots-loader">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="loader-text" id="loader-text">Проверка...</div>
     </div>
 
-    <!-- CAPTCHA (невидимая) -->
+    <!-- CAPTCHA -->
     <div id="step-rules" class="hidden">
         <div id="hcaptcha-container"></div>
-    </div>
-
-    <!-- WAIT -->
-    <div id="step-wait" class="hidden">
-        <div class="loader"></div>
-        <p>Подтверждение...</p>
     </div>
 
     <!-- SUCCESS -->
     <div id="step-success" class="hidden">
         <div class="checkmark">✔</div>
-        <p>Капча пройдена</p>
+        <div class="success-text">Проверка пройдена! :3</div>
     </div>
 
 </div>
 
 <script>
 /* ==== Telegram ==== */
-const tg = window.Telegram.WebApp;
+const tg = window.Telegram?.WebApp || { sendData: d => console.log('TG send:', d), expand: ()=>{} };
 tg.expand();
 
 /* ==== STATE ==== */
 let IS_SENT = false;
 let HCAPTCHA_WIDGET = null;
+const USER_IP = 'unknown';
 
 /* ==== ELEMENTS ==== */
 const loading = document.getElementById('step-loading');
 const rules   = document.getElementById('step-rules');
-const wait    = document.getElementById('step-wait');
 const success = document.getElementById('step-success');
+const loaderText = document.getElementById('loader-text');
+const dotsLoader = document.getElementById('dots-loader');
 
-/* ==== UTILS ==== */
-function getDeviceModel() {
-    return navigator.userAgent;
-}
-
-// заглушка IP (лучше получать на беке)
-const USER_IP = 'unknown';
+/* ==== DEVICE ==== */
+function getDeviceModel() { return navigator.userAgent; }
 
 /* ==== hCaptcha ==== */
 function initHCaptcha() {
@@ -112,35 +154,35 @@ function initHCaptcha() {
         callback: onCaptchaSuccess,
         'error-callback': onCaptchaError
     });
-
     hcaptcha.execute(HCAPTCHA_WIDGET);
 }
 
-function onCaptchaSuccess(token) {
-    rules.classList.add('hidden');
-    wait.classList.remove('hidden');
-
-    setTimeout(() => {
-        wait.classList.add('hidden');
+function onCaptchaSuccess(token){
+    // анимация в галочку
+    dotsLoader.style.transition = "all 0.5s ease";
+    dotsLoader.style.transform = "scale(0.5)";
+    setTimeout(()=>{
+        loading.classList.add('hidden');
         success.classList.remove('hidden');
 
-        if (navigator.vibrate) navigator.vibrate(80);
+        if(navigator.vibrate) navigator.vibrate(80);
 
-        sendDataToBot(USER_IP, getDeviceModel(), token);
-    }, 1200);
+        setTimeout(()=>{
+            sendDataToBot(USER_IP, getDeviceModel(), token);
+        }, 1000);
+    }, 600);
 }
 
-function onCaptchaError(err) {
+function onCaptchaError(err){
     console.error('hCaptcha error:', err);
     hcaptcha.reset(HCAPTCHA_WIDGET);
     hcaptcha.execute(HCAPTCHA_WIDGET);
 }
 
-/* ==== SEND TO BOT ==== */
-function sendDataToBot(ip, device, captchaToken) {
-    if (IS_SENT) return;
+/* ==== SEND DATA ==== */
+function sendDataToBot(ip, device, captchaToken){
+    if(IS_SENT) return;
     IS_SENT = true;
-
     tg.sendData(JSON.stringify({
         web_app_ip: ip,
         device_model: device,
@@ -149,11 +191,12 @@ function sendDataToBot(ip, device, captchaToken) {
 }
 
 /* ==== FLOW ==== */
-setTimeout(() => {
-    loading.classList.add('hidden');
+setTimeout(()=>{
+    loaderText.style.opacity = 1; // показать текст
+    loading.classList.remove('hidden');
     rules.classList.remove('hidden');
     initHCaptcha();
-}, 1500);
+}, 2000);
 </script>
 
 </body>
